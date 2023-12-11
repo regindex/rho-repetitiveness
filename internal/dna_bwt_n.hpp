@@ -310,8 +310,10 @@ private:
 	uint64_t F_N=0; //F array
 	uint64_t F_T=0; //F array
 
-	uint64_t number_sl_leaves=0; 	//number of leaves in the suffix link tree
-	uint64_t number_sl_leaves_ext=0;	//number of right extensions of suffix link tree leaves
+	//we start from 1 since the navigation procedure skips the leaves of the ST (and one of them, the
+	//deepest, is a suffix link leaf)
+	uint64_t number_sl_leaves=1; 		//number of leaves in the suffix link tree
+	uint64_t number_sl_leaves_ext=1;	//number of right extensions of suffix link tree leaves
 
 	//vector<uint64_t> F;
 	str_type BWT;
