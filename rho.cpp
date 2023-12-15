@@ -24,8 +24,8 @@ char TERM = '#';
 
 void help(){
 
-	cout << "size-from-bwt [options]" << endl <<
-	"Input: BWT of a DNA dataset (alphabet: A,C,G,T,N,#). Output: size of the SLT factorization." << endl <<
+	cout << "rho [options]" << endl <<
+	"Input: BWT of a DNA dataset (alphabet: A,C,G,T,N,#). Output: value of the rho repetitiveness measure and related statistics." << endl <<
 	"Options:" << endl <<
 	"-i <arg>    Input BWT (REQUIRED)" << endl <<
 	"-t          ASCII code of the terminator. Default:" << int('#') << " (#). Cannot be the code for A,C,G,T,N." << endl;
@@ -131,7 +131,7 @@ int main(int argc, char** argv){
 	cout << "Processed " << nodes << " suffix tree nodes." << endl;
 
 	cout << "Number of suffix link tree leaves: " << bwt.get_number_sl_leaves() << endl;
-	cout << "size of SLT factorization (number of right-extensions of suffix link tree leaves): " << bwt.get_number_sl_leaves_ext() << endl;
+	cout << "Number of right-extensions of suffix link tree leaves: " << bwt.get_number_sl_leaves_ext() << endl;
 
 
 }
