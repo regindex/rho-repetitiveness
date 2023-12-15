@@ -19,6 +19,11 @@ using namespace std;
 string input_bwt;
 
 bool containsN = false;
+uint64_t nodes=0; // number of visited nodes
+
+int last_perc = -1;
+int perc = 0;
+uint64_t n=0;
 
 char TERM = '#';
 
@@ -30,6 +35,38 @@ void help(){
 	"-i <arg>    Input BWT (REQUIRED)" << endl <<
 	"-t          ASCII code of the terminator. Default:" << int('#') << " (#). Cannot be the code for A,C,G,T,N." << endl;
 	exit(0);
+}
+
+
+//recursively processes node and return cost of its subtree, i.e. total number of right-extensions that we pay
+uint64_t process_node(dna_bwt_n_t& bwt, typename dna_bwt_n_t::sa_node_t& x){
+
+	nodes++;
+
+	perc = (100*nodes)/n;
+
+	if(perc > last_perc){
+
+		cout << perc << "%." << endl;
+		last_perc = perc;
+
+	}
+
+	int t = 0;
+
+	auto children = vector<typename dna_bwt_n_t::sa_node_t>(5); 
+
+	//get (right-maximal) children of current_node in the suffix link tree
+	bwt.next_nodes(x, children, t);
+
+	for(int i=t-1;i>=0;--i){
+
+		process_node(bwt, children[i]);
+		
+	}
+
+	return 0;
+
 }
 
 int main(int argc, char** argv){
@@ -69,65 +106,17 @@ int main(int argc, char** argv){
 
 	dna_bwt_n_t bwt = dna_bwt_n_t(input_bwt, TERM);
 
-	uint64_t n = bwt.size();
+	n = bwt.size();
 
 	cout << "Done. Size of BWT: " << n << endl;
 
+	//navigate suffix link tree
 
+	cout << "Starting DFS navigation of the suffix link tree." << endl;
 
-	//navigate suffix tree
+	auto x = bwt.root();
+	process_node(bwt, x);
 
-
-	uint64_t m = 0;//portion of text covered by visited leaves
-	uint64_t leaves = 0;//number of visited leaves
-	uint64_t max_stack = 0;
-
-	cout << "Starting navigation of the suffix tree." << endl;
-
-	auto TMP_NODES = vector<typename dna_bwt_n_t::sa_node_t>(5);
-
-	uint64_t nodes = 0;//visited ST nodes
-	max_stack = 0;
-
-	stack<typename dna_bwt_n_t::sa_node_t> S;
-
-	typename dna_bwt_n_t::sa_node_t root = bwt.root();
-
-	S.push(root);
-
-	int last_perc = -1;
-	int perc = 0;
-
-	while(not S.empty()){
-
-		max_stack = S.size() > max_stack ? S.size() : max_stack;
-
-		typename dna_bwt_n_t::sa_node_t N = S.top();
-		S.pop();
-		nodes++;
-
-		int t = 0;
-
-		bwt.next_nodes(N, TMP_NODES, t);
-
-		for(int i=t-1;i>=0;--i){
-
-			S.push(TMP_NODES[i]);
-
-		}
-
-		perc = (100*nodes)/n;
-
-		if(perc > last_perc){
-
-			cout << perc << "%." << endl;
-			last_perc = perc;
-
-		}
-
-	}
-
-	cout << "Max stack size = " << max_stack << endl;
 	cout << "Processed " << nodes << " suffix tree nodes." << endl;
 
 	cout << "Number of suffix link tree leaves: " << bwt.get_number_sl_leaves() << endl;
