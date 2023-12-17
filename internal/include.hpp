@@ -230,6 +230,10 @@ struct p_node_n{
 
 };
 
+struct flags{
+	bool TM,A,C,G,N,T;
+};
+
 void print_nodes(p_node p){
 
 	print_node(p.A);

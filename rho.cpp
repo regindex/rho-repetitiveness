@@ -37,9 +37,8 @@ void help(){
 	exit(0);
 }
 
-
 //recursively processes node and return cost of its subtree, i.e. total number of right-extensions that we pay
-uint64_t process_node(dna_bwt_n_t& bwt, typename dna_bwt_n_t::sa_node_t& x){
+uint64_t process_node(dna_bwt_n_t& bwt, typename dna_bwt_n_t::sa_node_t& x, flags& x_flags){
 
 	nodes++;
 
@@ -59,13 +58,39 @@ uint64_t process_node(dna_bwt_n_t& bwt, typename dna_bwt_n_t::sa_node_t& x){
 	//get (right-maximal) children of current_node in the suffix link tree
 	bwt.next_nodes(x, children, t);
 
+	x_flags = flags{false,false,false,false,false,false};
+
+	uint64_t rho = 0;
+
 	for(int i=t-1;i>=0;--i){
 
-		process_node(bwt, children[i]);
+		flags tmp_flags {false,false,false,false,false,false};
+		rho += process_node(bwt, children[i],tmp_flags);
+
+		x_flags.TM |= tmp_flags.TM;
+		x_flags.A  |= tmp_flags.A;
+		x_flags.C  |= tmp_flags.C;
+		x_flags.G  |= tmp_flags.G;
+		x_flags.N  |= tmp_flags.N;
+		x_flags.T  |= tmp_flags.T;
 		
 	}
 
-	return 0;
+	rho += (has_child_TERM(x) and not x_flags.TM);
+	rho += (has_child_A(x) and not x_flags.A);
+	rho += (has_child_C(x) and not x_flags.C);
+	rho += (has_child_G(x) and not x_flags.G);
+	rho += (has_child_N(x) and not x_flags.N);
+	rho += (has_child_T(x) and not x_flags.T);
+
+	x_flags.TM |= has_child_TERM(x);
+	x_flags.A  |= has_child_A(x);
+	x_flags.C  |= has_child_C(x);
+	x_flags.G  |= has_child_G(x);
+	x_flags.N  |= has_child_N(x);
+	x_flags.T  |= has_child_T(x);
+
+	return rho;
 
 }
 
@@ -115,10 +140,12 @@ int main(int argc, char** argv){
 	cout << "Starting DFS navigation of the suffix link tree." << endl;
 
 	auto x = bwt.root();
-	process_node(bwt, x);
+	flags x_flags = flags{false,false,false,false,false,false};
+	uint64_t rho = process_node(bwt, x, x_flags);
 
 	cout << "Processed " << nodes << " suffix tree nodes." << endl;
 
+	cout << "rho = " << rho << endl;
 	cout << "Number of suffix link tree leaves: " << bwt.get_number_sl_leaves() << endl;
 	cout << "Number of right-extensions of suffix link tree leaves: " << bwt.get_number_sl_leaves_ext() << endl;
 

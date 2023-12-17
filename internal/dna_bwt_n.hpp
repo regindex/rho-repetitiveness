@@ -281,11 +281,11 @@ public:
 			number_sl_leaves_ext += number_of_children(x);
 		}
 
-		//push right-maximal nodes on stack in decreasing size (i.e. interval length) order
+		//return right-maximal nodes in increasing size (i.e. interval length) order
 
 		std::sort( TMP_NODES.begin(), TMP_NODES.begin()+t, [ ]( const sa_node_n& lhs, const sa_node_n& rhs )
 		{
-			return node_size(lhs) < node_size(rhs);
+			return node_size(lhs) > node_size(rhs);
 		});
 
 	}
