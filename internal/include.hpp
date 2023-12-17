@@ -343,6 +343,8 @@ inline uint64_t popcount128(__uint128_t x){
 
 }
 
+//children on the suffix tree:
+
 range_t child_TERM(sa_node x){
 	return {x.first_TERM, x.first_A};
 }
@@ -413,6 +415,10 @@ inline bool has_child_T(sa_node_n N){
 	return N.last > N.first_T;
 }
 
+inline bool empty_node(sa_node_n N){
+	return N.last == N.first_TERM;
+}
+
 uint8_t number_of_children(sa_node N){
 
 	return 	uint8_t(N.last>N.first_T) +
@@ -433,6 +439,7 @@ uint8_t number_of_children(sa_node_n N){
 			uint8_t(N.first_A>N.first_TERM);
 
 }
+
 
 /*
  * number of children in the union of the two nodes

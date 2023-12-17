@@ -25,6 +25,9 @@ int last_perc = -1;
 int perc = 0;
 uint64_t n=0;
 
+uint64_t rec_depth = 0;
+uint64_t max_rec_depth = 0;
+
 char TERM = '#';
 
 void help(){
@@ -41,6 +44,40 @@ void help(){
 uint64_t process_node(dna_bwt_n_t& bwt, typename dna_bwt_n_t::sa_node_t& x, flags& x_flags){
 
 	nodes++;
+	rec_depth++;
+
+	if(rec_depth>max_rec_depth){
+		max_rec_depth = rec_depth;
+		cout << "recursion depth = " << rec_depth << endl;
+	}
+
+	auto weiner_links = bwt.weiner_links(x);
+
+	//skip unary paths (they may be very long and fill the stack!)
+	while(bwt.is_weiner_unary(x)){
+
+		p_node_n left_exts = bwt.LF(x);
+
+		if(weiner_links.A){
+			x = left_exts.A;
+		}
+		if(weiner_links.C){
+			x = left_exts.C;
+		}
+		if(weiner_links.G){
+			x = left_exts.G;
+		}
+		if(weiner_links.N){
+			x = left_exts.N;
+		}
+		if(weiner_links.T){
+			x = left_exts.T;
+		}
+
+		nodes++;
+		weiner_links = bwt.weiner_links(x);
+
+	}
 
 	perc = (100*nodes)/n;
 
@@ -51,18 +88,16 @@ uint64_t process_node(dna_bwt_n_t& bwt, typename dna_bwt_n_t::sa_node_t& x, flag
 
 	}
 
+	//get (right-maximal) children of x in the Weiner tree
 	int t = 0;
-
 	auto children = vector<typename dna_bwt_n_t::sa_node_t>(5); 
-
-	//get (right-maximal) children of current_node in the suffix link tree
 	bwt.next_nodes(x, children, t);
 
 	x_flags = flags{false,false,false,false,false,false};
 
 	uint64_t rho = 0;
 
-	for(int i=t-1;i>=0;--i){
+	for(int i=0;i<t;++i){
 
 		flags tmp_flags {false,false,false,false,false,false};
 		rho += process_node(bwt, children[i],tmp_flags);
@@ -90,6 +125,8 @@ uint64_t process_node(dna_bwt_n_t& bwt, typename dna_bwt_n_t::sa_node_t& x, flag
 	x_flags.N  |= has_child_N(x);
 	x_flags.T  |= has_child_T(x);
 
+
+	rec_depth--;
 	return rho;
 
 }
@@ -148,7 +185,7 @@ int main(int argc, char** argv){
 	cout << "rho = " << rho << endl;
 	cout << "Number of suffix link tree leaves: " << bwt.get_number_sl_leaves() << endl;
 	cout << "Number of right-extensions of suffix link tree leaves: " << bwt.get_number_sl_leaves_ext() << endl;
-
+	cout << "Maximum recursion depth = " << max_rec_depth << endl;
 
 }
 

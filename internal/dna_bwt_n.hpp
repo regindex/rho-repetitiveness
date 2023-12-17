@@ -250,6 +250,30 @@ public:
 
 	}
 
+	//return labels of Weiner links exiting x
+	flags weiner_links(sa_node_n & x){
+
+		p_node_n left_exts = LF(x);
+
+		return {	false,
+					not empty_node(left_exts.A),
+					not empty_node(left_exts.C),
+					not empty_node(left_exts.G),
+					not empty_node(left_exts.N),
+					not empty_node(left_exts.T)
+					};
+
+	}
+
+
+	//does the node have only one exiting Weiner link?
+	bool is_weiner_unary(sa_node_n & x){
+
+		auto wl = weiner_links(x);
+		return wl.A + wl.C + wl.G + wl.N + wl.T == 1;
+	
+	}
+
 	//follow Weiner links from node x and push on the stack the resulting right-maximal nodes
 	void next_nodes(sa_node_n & x, vector<sa_node_n> & TMP_NODES, int & t){
 
