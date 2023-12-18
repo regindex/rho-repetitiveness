@@ -275,7 +275,7 @@ public:
 	}
 
 	//follow Weiner links from node x and push on the stack the resulting right-maximal nodes
-	void next_nodes(sa_node_n & x, vector<sa_node_n> & TMP_NODES, int & t){
+	void get_weiner_children(sa_node_n & x, vector<sa_node_n> & TMP_NODES, int & t){
 
 		p_node_n left_exts = LF(x);
 
@@ -309,7 +309,7 @@ public:
 
 		std::sort( TMP_NODES.begin(), TMP_NODES.begin()+t, [ ]( const sa_node_n& lhs, const sa_node_n& rhs )
 		{
-			return node_size(lhs) > node_size(rhs);
+			return node_size(lhs) < node_size(rhs);
 		});
 
 	}
