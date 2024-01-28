@@ -204,6 +204,18 @@ public:
 
 	}
 
+	//number of BWT equal-letter runs
+	uint64_t r(){
+
+		uint64_t runs=0;
+
+		for(uint64_t i=1;i<size();++i) if(operator[](i)!=operator[](i-1)) runs++;
+
+		return runs;
+
+	}
+
+
 	/*
 	 * Input: suffix tree node N.
 	 * Output: suffix tree nodes (explicit, implicit, or empty) reached applying LF for A,C,G,T,N from node N
@@ -287,22 +299,22 @@ public:
 
 		t = 0;
 
-		if(number_of_children(A) >= 2) TMP_NODES[t++] = A;
-		if(number_of_children(C) >= 2) TMP_NODES[t++] = C;
-		if(number_of_children(G) >= 2) TMP_NODES[t++] = G;
-		if(number_of_children(N) >= 2) TMP_NODES[t++] = N;
-		if(number_of_children(T) >= 2) TMP_NODES[t++] = T;
+		if(number_of_right_ext(A) >= 2) TMP_NODES[t++] = A;
+		if(number_of_right_ext(C) >= 2) TMP_NODES[t++] = C;
+		if(number_of_right_ext(G) >= 2) TMP_NODES[t++] = G;
+		if(number_of_right_ext(N) >= 2) TMP_NODES[t++] = N;
+		if(number_of_right_ext(T) >= 2) TMP_NODES[t++] = T;
 
 		//is x a leaf in the suffix link tree?
 		if(
-			number_of_children(A) < 2 and 
-			number_of_children(C) < 2 and 
-			number_of_children(G) < 2 and 
-			number_of_children(N) < 2 and 
-			number_of_children(T) < 2
+			number_of_right_ext(A) < 2 and 
+			number_of_right_ext(C) < 2 and 
+			number_of_right_ext(G) < 2 and 
+			number_of_right_ext(N) < 2 and 
+			number_of_right_ext(T) < 2
 		){
 			number_sl_leaves++;
-			number_sl_leaves_ext += number_of_children(x);
+			number_sl_leaves_ext += number_of_right_ext(x);
 		}
 
 		//return right-maximal nodes in increasing size (i.e. interval length) order
@@ -312,14 +324,6 @@ public:
 			return node_size(lhs) < node_size(rhs);
 		});
 
-	}
-
-	uint64_t get_number_sl_leaves(){
-		return number_sl_leaves;
-	}
-
-		uint64_t get_number_sl_leaves_ext(){
-		return number_sl_leaves_ext;
 	}
 
 private:

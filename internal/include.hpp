@@ -343,75 +343,38 @@ inline uint64_t popcount128(__uint128_t x){
 
 }
 
-//children on the suffix tree:
-
-range_t child_TERM(sa_node x){
-	return {x.first_TERM, x.first_A};
-}
-range_t child_A(sa_node x){
-	return {x.first_A, x.first_C};
-}
-range_t child_C(sa_node x){
-	return {x.first_C, x.first_G};
-}
-range_t child_G(sa_node x){
-	return {x.first_G, x.first_T};
-}
-range_t child_T(sa_node x){
-	return {x.first_T, x.last};
-}
-
-range_t child_TERM(sa_node_n x){
-	return {x.first_TERM, x.first_A};
-}
-range_t child_A(sa_node_n x){
-	return {x.first_A, x.first_C};
-}
-range_t child_C(sa_node_n x){
-	return {x.first_C, x.first_G};
-}
-range_t child_G(sa_node_n x){
-	return {x.first_G, x.first_N};
-}
-range_t child_N(sa_node_n x){
-	return {x.first_N, x.first_T};
-}
-range_t child_T(sa_node_n x){
-	return {x.first_T, x.last};
-}
-
-inline bool has_child_TERM(sa_node N){
+inline bool has_right_ext_TERM(sa_node N){
 	return N.first_A > N.first_TERM;
 }
-inline bool has_child_A(sa_node N){
+inline bool has_right_ext_A(sa_node N){
 	return N.first_C > N.first_A;
 }
-inline bool has_child_C(sa_node N){
+inline bool has_right_ext_C(sa_node N){
 	return N.first_G > N.first_C;
 }
-inline bool has_child_G(sa_node N){
+inline bool has_right_ext_G(sa_node N){
 	return N.first_T > N.first_G;
 }
-inline bool has_child_T(sa_node N){
+inline bool has_right_ext_T(sa_node N){
 	return N.last > N.first_T;
 }
 
-inline bool has_child_TERM(sa_node_n N){
+inline bool has_right_ext_TERM(sa_node_n N){
 	return N.first_A > N.first_TERM;
 }
-inline bool has_child_A(sa_node_n N){
+inline bool has_right_ext_A(sa_node_n N){
 	return N.first_C > N.first_A;
 }
-inline bool has_child_C(sa_node_n N){
+inline bool has_right_ext_C(sa_node_n N){
 	return N.first_G > N.first_C;
 }
-inline bool has_child_G(sa_node_n N){
+inline bool has_right_ext_G(sa_node_n N){
 	return N.first_N > N.first_G;
 }
-inline bool has_child_N(sa_node_n N){
+inline bool has_right_ext_N(sa_node_n N){
 	return N.first_T > N.first_N;
 }
-inline bool has_child_T(sa_node_n N){
+inline bool has_right_ext_T(sa_node_n N){
 	return N.last > N.first_T;
 }
 
@@ -419,7 +382,7 @@ inline bool empty_node(sa_node_n N){
 	return N.last == N.first_TERM;
 }
 
-uint8_t number_of_children(sa_node N){
+uint8_t number_of_right_ext(sa_node N){
 
 	return 	uint8_t(N.last>N.first_T) +
 			uint8_t(N.first_T>N.first_G) +
@@ -429,7 +392,7 @@ uint8_t number_of_children(sa_node N){
 
 }
 
-uint8_t number_of_children(sa_node_n N){
+uint8_t number_of_right_ext(sa_node_n N){
 
 	return 	uint8_t(N.last>N.first_T) +
 			uint8_t(N.first_T>N.first_N) +
@@ -439,129 +402,6 @@ uint8_t number_of_children(sa_node_n N){
 			uint8_t(N.first_A>N.first_TERM);
 
 }
-
-
-/*
- * number of children in the union of the two nodes
- */
-uint8_t number_of_children(sa_node N1, sa_node N2){
-
-	return 	uint8_t((N1.last>N1.first_T) or (N2.last>N2.first_T)) +
-			uint8_t((N1.first_T>N1.first_G) or (N2.first_T>N2.first_G)) +
-			uint8_t((N1.first_G>N1.first_C) or (N2.first_G>N2.first_C)) +
-			uint8_t((N1.first_C>N1.first_A) or (N2.first_C>N2.first_A)) +
-			uint8_t((N1.first_A>N1.first_TERM) or (N2.first_A>N2.first_TERM));
-
-}
-
-/*
- * number of children in the union of the two nodes
- */
-uint8_t number_of_children(sa_node_n N1, sa_node_n N2){
-
-	return 	uint8_t((N1.last>N1.first_T) or (N2.last>N2.first_T)) +
-			uint8_t((N1.first_T>N1.first_N) or (N2.first_T>N2.first_N)) +
-			uint8_t((N1.first_N>N1.first_G) or (N2.first_N>N2.first_G)) +
-			uint8_t((N1.first_G>N1.first_C) or (N2.first_G>N2.first_C)) +
-			uint8_t((N1.first_C>N1.first_A) or (N2.first_C>N2.first_A)) +
-			uint8_t((N1.first_A>N1.first_TERM) or (N2.first_A>N2.first_TERM));
-
-}
-
-/*
- * number of children in the union of the two nodes
- */
-uint8_t number_of_children(pair<sa_node,sa_node> P){
-
-	return number_of_children(P.first, P.second);
-
-}
-
-/*
- * number of children in the union of the two nodes
- */
-uint8_t number_of_children(pair<sa_node_n,sa_node_n> P){
-
-	return number_of_children(P.first, P.second);
-
-}
-
-template<typename lcp_int_t>
-void update_lcp(sa_node & x, vector<lcp_int_t> & LCP, uint64_t & lcp_values){
-
-	assert(x.first_A >= x.first_TERM);
-	assert(x.first_C >= x.first_A);
-	assert(x.first_G >= x.first_C);
-	assert(x.first_T >= x.first_G);
-
-	assert(number_of_children(x) >= 2);
-
-	lcp_int_t nil = ~lcp_int_t(0);
-
-	if(has_child_TERM(x) and x.first_A != x.last){
-		assert(LCP[x.first_A]==nil);
-		LCP[x.first_A] = x.depth;
-		lcp_values++;
-	}
-	if(has_child_A(x) and x.first_C != x.last){
-		assert(LCP[x.first_C]==nil);
-		LCP[x.first_C] = x.depth;
-		lcp_values++;
-	}
-	if(has_child_C(x) and x.first_G != x.last){
-		assert(LCP[x.first_G]==nil);
-		LCP[x.first_G] = x.depth;
-		lcp_values++;
-	}
-	if(has_child_G(x) and x.first_T != x.last){
-		assert(LCP[x.first_T]==nil);
-		LCP[x.first_T] = x.depth;
-		lcp_values++;
-	}
-
-}
-
-template<typename lcp_int_t>
-void update_lcp(sa_node_n & x, vector<lcp_int_t> & LCP, uint64_t & lcp_values){
-
-	assert(x.first_A >= x.first_TERM);
-	assert(x.first_C >= x.first_A);
-	assert(x.first_G >= x.first_C);
-	assert(x.first_N >= x.first_G);
-	assert(x.first_T >= x.first_N);
-
-	assert(number_of_children(x) >= 2);
-
-	lcp_int_t nil = ~lcp_int_t(0);
-
-	if(has_child_TERM(x) and x.first_A != x.last){
-		assert(LCP[x.first_A]==nil);
-		LCP[x.first_A] = x.depth;
-		lcp_values++;
-	}
-	if(has_child_A(x) and x.first_C != x.last){
-		assert(LCP[x.first_C]==nil);
-		LCP[x.first_C] = x.depth;
-		lcp_values++;
-	}
-	if(has_child_C(x) and x.first_G != x.last){
-		assert(LCP[x.first_G]==nil);
-		LCP[x.first_G] = x.depth;
-		lcp_values++;
-	}
-	if(has_child_G(x) and x.first_N != x.last){
-		assert(LCP[x.first_N]==nil);
-		LCP[x.first_N] = x.depth;
-		lcp_values++;
-	}
-	if(has_child_N(x) and x.first_T != x.last){
-		assert(LCP[x.first_T]==nil);
-		LCP[x.first_T] = x.depth;
-		lcp_values++;
-	}
-
-}
-
 
 #endif /* INCLUDE_HPP_ */
 

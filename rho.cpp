@@ -24,6 +24,8 @@ vector<bool> suffixient_bwt; //marks set of nexessary+suffixient BWT positions
 bool containsN = false;
 uint64_t nodes=0; // number of visited nodes
 
+uint64_t wl_leaves=0; // number of Weiner tree leaves
+
 int last_perc = -1;
 int perc = 0;
 uint64_t n=0;
@@ -46,16 +48,12 @@ void help(){
 //recursively processes node and return cost of its subtree, i.e. total number of 
 //right-extensions that we pay
 uint64_t process_node(	typename dna_bwt_n_t::sa_node_t& x, 
-						//function process_node will overwrite this with right ext covered 
-						//by weiner descendants of x
-						flags& covered_from_wchildren, 
-						//pass in to_be_covered the right-extensions that must be covered in x (or 
-						//in its Weiner descendants) due to ancestors of x
-						flags& to_be_covered
+						//The function "process_node" will add (OR) to this flag the 
+						//right-extensions that are covered on node x
+						flags& covered_from_wchildren
 						){ 
 
 	rec_depth++;
-
 	max_rec_depth = std::max(max_rec_depth,rec_depth);
 
 	uint64_t rho = 0;
@@ -80,63 +78,96 @@ uint64_t process_node(	typename dna_bwt_n_t::sa_node_t& x,
 		auto children = vector<typename dna_bwt_n_t::sa_node_t>(5); 
 		bwt.get_weiner_children(x, children, t);
 
-		//right-extensions that need to be covered on x.
-		//these are the right-extensions of x, plus those that needed to 
-		//be covered in some ancestor of x
-		to_be_covered.TM |= has_child_TERM(x);
-		to_be_covered.A  |= has_child_A(x);
-		to_be_covered.C  |= has_child_C(x);
-		to_be_covered.G  |= has_child_G(x);
-		to_be_covered.N  |= has_child_N(x);
-		to_be_covered.T  |= has_child_T(x);
-
 		if(t==0){ 
 
-			// no children in the Weiner tree: pay the right extensions that need to be covered
+			// no children in the Weiner tree: pay all the right extensions of string(x)
 
-			rho += to_be_covered.TM;
-			rho += to_be_covered.A;
-			rho += to_be_covered.C;
-			rho += to_be_covered.G;
-			rho += to_be_covered.N;
-			rho += to_be_covered.T;
+			wl_leaves++;
 
-			covered_from_wchildren = flags{ to_be_covered.TM,
-											to_be_covered.A,
-											to_be_covered.C,
-											to_be_covered.G,
-											to_be_covered.N,
-											to_be_covered.T };
+			rho += has_right_ext_TERM(x);
+			rho += has_right_ext_A(x);
+			rho += has_right_ext_C(x);
+			rho += has_right_ext_G(x);
+			rho += has_right_ext_N(x);
+			rho += has_right_ext_T(x);
+
+			covered_from_wchildren.TM |= has_right_ext_TERM(x);
+			covered_from_wchildren.A  |= has_right_ext_A(x);
+			covered_from_wchildren.C  |= has_right_ext_C(x);
+			covered_from_wchildren.G  |= has_right_ext_G(x);
+			covered_from_wchildren.N  |= has_right_ext_N(x);
+			covered_from_wchildren.T  |= has_right_ext_T(x);
 
 			break;
 
 		}else{
 
-			covered_from_wchildren = flags{false,false,false,false,false,false};
+			flags tmp_covered_children {false,false,false,false,false,false};
 
 			//scan all children but the last
-			for(int i=0;i<t-1;++i){
+			for(int i=0;i<t-1;++i)
+				rho += process_node(children[i],tmp_covered_children);
+			
 
-				flags tmp_covered_children {false,false,false,false,false,false};
-				flags tmp_to_be_covered {false,false,false,false,false,false};
+			if(	has_right_ext_TERM(x) and 
+				(not tmp_covered_children.TM) and 
+				not has_right_ext_TERM(children[t-1])){
 
-				rho += process_node(children[i],tmp_covered_children,tmp_to_be_covered);
+				//TERM has to be covered on node x
+				covered_from_wchildren.TM = true;
+				rho++;
 
-				covered_from_wchildren.TM |= tmp_covered_children.TM;
-				covered_from_wchildren.A  |= tmp_covered_children.A;
-				covered_from_wchildren.C  |= tmp_covered_children.C;
-				covered_from_wchildren.G  |= tmp_covered_children.G;
-				covered_from_wchildren.N  |= tmp_covered_children.N;
-				covered_from_wchildren.T  |= tmp_covered_children.T;
-				
 			}
 
-			to_be_covered.TM = to_be_covered.TM and not covered_from_wchildren.TM;
-			to_be_covered.A  = to_be_covered.A  and not covered_from_wchildren.A;
-			to_be_covered.C  = to_be_covered.C  and not covered_from_wchildren.C;
-			to_be_covered.G  = to_be_covered.G  and not covered_from_wchildren.G;
-			to_be_covered.N  = to_be_covered.N  and not covered_from_wchildren.N;
-			to_be_covered.T  = to_be_covered.T  and not covered_from_wchildren.T;
+			if(	has_right_ext_A(x) and 
+				(not tmp_covered_children.A) and 
+				not has_right_ext_A(children[t-1])){
+
+				//A has to be covered on node x
+				covered_from_wchildren.A = true;
+				rho++;
+
+			}
+
+			if(	has_right_ext_C(x) and 
+				(not tmp_covered_children.C) and 
+				not has_right_ext_C(children[t-1])){
+
+				//C has to be covered on node x
+				covered_from_wchildren.C = true;
+				rho++;
+
+			}
+
+			if(	has_right_ext_G(x) and 
+				(not tmp_covered_children.G) and 
+				not has_right_ext_G(children[t-1])){
+
+				//G has to be covered on node x
+				covered_from_wchildren.G = true;
+				rho++;
+
+			}
+
+			if(	has_right_ext_N(x) and 
+				(not tmp_covered_children.N) and 
+				not has_right_ext_N(children[t-1])){
+
+				//N has to be covered on node x
+				covered_from_wchildren.N = true;
+				rho++;
+
+			}
+
+			if(	has_right_ext_T(x) and 
+				(not tmp_covered_children.T) and 
+				not has_right_ext_T(children[t-1])){
+
+				//T has to be covered on node x
+				covered_from_wchildren.T = true;
+				rho++;
+
+			}
 
 			x = children[t-1];
 
@@ -192,20 +223,17 @@ int main(int argc, char** argv){
 
 	//navigate suffix link tree
 
-	cout << "Starting DFS navigation of the suffix link tree." << endl;
+	cout << "Starting DFS navigation of the Weiner tree." << endl;
 
 	auto x = bwt.root();
 
 	flags tmp_covered_children {false,false,false,false,false,false};
-	flags tmp_to_be_covered {false,false,false,false,false,false};
-
-	uint64_t rho = process_node(x, tmp_covered_children,tmp_to_be_covered);
+	uint64_t rho = process_node(x, tmp_covered_children);
 
 	cout << "Processed " << nodes << " suffix tree nodes." << endl;
-
 	cout << "rho = " << rho << endl;
-	cout << "Number of suffix link tree leaves: " << bwt.get_number_sl_leaves() << endl;
-	cout << "Number of right-extensions of suffix link tree leaves: " << bwt.get_number_sl_leaves_ext() << endl;
+	cout << "r = " << bwt.r() << endl;
+	cout << "Number of Weiner tree leaves: " << wl_leaves << endl;
 	cout << "Maximum recursion depth = " << max_rec_depth << endl;
 
 }
