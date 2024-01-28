@@ -18,6 +18,8 @@
 using namespace std;
 
 string input_bwt;
+dna_bwt_n_t bwt;
+vector<bool> suffixient_bwt; //marks set of nexessary+suffixient BWT positions
 
 bool containsN = false;
 uint64_t nodes=0; // number of visited nodes
@@ -41,11 +43,16 @@ void help(){
 	exit(0);
 }
 
-//recursively processes node and return cost of its subtree, i.e. total number of right-extensions that we pay
-uint64_t process_node(	dna_bwt_n_t& bwt, 
-						typename dna_bwt_n_t::sa_node_t& x, 
-						flags& covered_from_wchildren, //this function will overwrite this with right ext covered by weiner descendants of x
-						flags& to_be_covered){ //pass here right-extensions that must be covered in x (or in its Weiner descendants) due to ancestors of x
+//recursively processes node and return cost of its subtree, i.e. total number of 
+//right-extensions that we pay
+uint64_t process_node(	typename dna_bwt_n_t::sa_node_t& x, 
+						//function process_node will overwrite this with right ext covered 
+						//by weiner descendants of x
+						flags& covered_from_wchildren, 
+						//pass in to_be_covered the right-extensions that must be covered in x (or 
+						//in its Weiner descendants) due to ancestors of x
+						flags& to_be_covered
+						){ 
 
 	rec_depth++;
 
@@ -53,6 +60,9 @@ uint64_t process_node(	dna_bwt_n_t& bwt,
 
 	uint64_t rho = 0;
 
+	//we recurse on all but the last child of x. On the last child, we cycle in this while loop, 
+	//replacing x with its last child. Since we process recursively children in decreasing order of
+	//BWT interval length, this guarantees that the recursion depth is logarithmic.
 	while(true){
 
 		nodes++;
@@ -110,7 +120,7 @@ uint64_t process_node(	dna_bwt_n_t& bwt,
 				flags tmp_covered_children {false,false,false,false,false,false};
 				flags tmp_to_be_covered {false,false,false,false,false,false};
 
-				rho += process_node(bwt, children[i],tmp_covered_children,tmp_to_be_covered);
+				rho += process_node(children[i],tmp_covered_children,tmp_to_be_covered);
 
 				covered_from_wchildren.TM |= tmp_covered_children.TM;
 				covered_from_wchildren.A  |= tmp_covered_children.A;
@@ -174,7 +184,7 @@ int main(int argc, char** argv){
 
 	cout << "Loading and indexing BWT ... " << endl;
 
-	dna_bwt_n_t bwt = dna_bwt_n_t(input_bwt, TERM);
+	bwt = dna_bwt_n_t(input_bwt, TERM);
 
 	n = bwt.size();
 
@@ -189,7 +199,7 @@ int main(int argc, char** argv){
 	flags tmp_covered_children {false,false,false,false,false,false};
 	flags tmp_to_be_covered {false,false,false,false,false,false};
 
-	uint64_t rho = process_node(bwt, x, tmp_covered_children,tmp_to_be_covered);
+	uint64_t rho = process_node(x, tmp_covered_children,tmp_to_be_covered);
 
 	cout << "Processed " << nodes << " suffix tree nodes." << endl;
 
