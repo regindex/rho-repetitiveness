@@ -14,12 +14,17 @@
 #include "internal/dna_bwt_n.hpp"
 #include <stack>
 #include <algorithm>
+#include <sdsl/construct_bwt.hpp>
+#include <sdsl/suffix_arrays.hpp>
 
 using namespace std;
+using namespace sdsl;
 
 string input_bwt;
 dna_bwt_n_t bwt;
 vector<bool> suffixient_bwt; //marks set of nexessary+suffixient BWT positions
+
+int_vector_buffer<> sa;
 
 bool containsN = false;
 uint64_t nodes=0; // number of visited nodes
@@ -177,6 +182,32 @@ uint64_t process_node(	typename dna_bwt_n_t::sa_node_t& x,
 
 	rec_depth--;
 	return rho;
+
+}
+
+//input: string s, not containing 0 symbol
+//output: BWT of s
+string build_bwt(string& s){
+
+	cache_config cc;
+	int_vector<8> text(s.size());
+
+	for(uint64_t i=0;i<s.size();++i) text[i] = (uint8_t)s[i];
+	
+	append_zero_symbol(text);
+	store_to_cache(text, conf::KEY_TEXT, cc);
+	construct_sa<8>(cc);
+	sa = int_vector_buffer<>(cache_file_name(conf::KEY_SA, cc));
+
+	string bwt(s.size()+1,0);
+
+	for(uint64_t i = 0;i<s.size()+1;++i) bwt[i] = sa[i]==0 ? '#' : s[sa[i]-1];
+
+	sdsl::remove(cache_file_name(conf::KEY_TEXT, cc));
+	sdsl::remove(cache_file_name(conf::KEY_SA, cc));
+	sdsl::remove(cache_file_name(conf::KEY_BWT, cc));
+
+	return bwt;
 
 }
 
